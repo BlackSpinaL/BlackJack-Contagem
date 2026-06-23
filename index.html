@@ -82,7 +82,6 @@ let playerCards = ['', ''];
 let maxCards = 8;
 let runningCount = 0;
 let numDecks = 6;
-
 function setDecks(n){ numDecks=parseInt(n); resetCount(); }
 
 function cardCountValue(card){
@@ -97,10 +96,48 @@ function addCard(){
 function removeCard(){
   if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); updateDecision(); }
 }
+
+function updateCardInputs(){
+  const container=document.getElementById('playerCardsContainer');
+  container.innerHTML='';
+  playerCards.forEach((card,index)=>{
+    const select=document.createElement('select');
+    select.className='card-select';
+    select.id=`card${index+1}`;
+    select.innerHTML=`<option value="">-- Carta ${index+1} --</option>
+      <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
+      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+      <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
+    select.value=card;
+    select.onchange=()=>{ 
+      playerCards[index]=select.value; 
+      updateCount(); 
+      updateDecision(); 
+    };
+    container.appendChild(select);
+  });
+  const dealer=document.getElementById('dealerCard');
+  dealer.innerHTML=`<option value="">-- Carta Dealer --</option>
+    <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
+    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+    <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
+  dealer.onchange=()=>{ updateCount(); updateDecision(); };
+}
+
+function updateCount(){
+  runningCount=0;
+  playerCards.forEach(c=>{ runningCount+=cardCountValue(c); });
+  let trueCount=runningCount/numDecks;
+  document.getElementById("runningCount").textContent=runningCount;
+  document.getElementById("trueCount").textContent=trueCount.toFixed(2);
+
   if(trueCount>=2){
     document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: continue apostando</strong>";
   } else {
-    document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: pare as apostas</strong>";
+    document
+        document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: pare as apostas</strong>";
   }
 }
 
