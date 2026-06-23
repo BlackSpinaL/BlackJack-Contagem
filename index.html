@@ -104,6 +104,7 @@ function addCard(){
 function removeCard(){
   if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); }
 }
+
 function updateCardInputs(){
   const container=document.getElementById('playerCardsContainer');
   container.innerHTML='';
@@ -132,9 +133,9 @@ function updateCount(){
   runningCount=0;
   playerCards.forEach(c=>{ runningCount+=cardCountValue(c); });
   let trueCount=runningCount/numDecks;
-  document.getElementBy
-    document.getElementById("runningCount").textContent=runningCount;
-  document.getElementById("trueCount").textContent=trueCount.toFixed(2);
+  document.getElementById("runningCount").textContent=runningCount;
+  document
+    .getElementById("trueCount").textContent=trueCount.toFixed(2);
 
   if(trueCount>=2){
     document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: continue apostando</strong>";
