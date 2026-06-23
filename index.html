@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BlackJack - Contagem</title>
 <style>
-/* Mantém estilo original */
 @font-face { font-family: 'Aptos'; src: local('Aptos'); }
 * { box-sizing: border-box; font-family: 'Aptos','Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
 body { background: linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); min-height:100vh; margin:0; padding:20px; color:#e0e0e0; }
@@ -130,3 +129,9 @@ function resetCount(){
   document.getElementById("betAdvice").textContent="--";
   updateCardInputs();
 }
+
+// Inicializa os menus ao carregar a página
+updateCardInputs();
+</script>
+</body>
+</html>
