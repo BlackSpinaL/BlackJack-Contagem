@@ -25,6 +25,9 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
 .decision-STAND { background:linear-gradient(45deg,#2ed573,#1e904d); color:white; }
 .decision-DOUBLE { background:linear-gradient(45deg,#ff6b35,#f7931e); color:white; }
 .decision-SPLIT { background:linear-gradient(45deg,#8e44ad,#5d1088); color:white; }
+
+/* Nova classe para recomendação */
+.bet-red { color:red; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -101,15 +104,43 @@ function addCard(){
 function removeCard(){
   if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); }
 }
+function updateCardInputs(){
+  const container=document.getElementById('playerCardsContainer');
+  container.innerHTML='';
+  playerCards.forEach((card,index)=>{
+    const select=document.createElement('select');
+    select.className='card-select';
+    select.id=`card${index+1}`;
+    select.innerHTML=`<option value="">-- Carta ${index+1} --</option>
+      <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
+      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+      <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
+    select.value=card;
+    select.onchange=()=>{ playerCards[index]=select.value; updateCount(); };
+    container.appendChild(select);
+  });
+  const dealer=document.getElementById('dealerCard');
+  dealer.innerHTML=`<option value="">-- Carta Dealer --</option>
+    <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
+    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+    <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
+}
+
 function updateCount(){
   runningCount=0;
   playerCards.forEach(c=>{ runningCount+=cardCountValue(c); });
   let trueCount=runningCount/numDecks;
-  document.getElementById("runningCount").textContent=runningCount;
+  document.getElementBy
+    document.getElementById("runningCount").textContent=runningCount;
   document.getElementById("trueCount").textContent=trueCount.toFixed(2);
-  document.getElementById("betAdvice").textContent=(trueCount>=2) 
-    ? "True Count: continue apostando" 
-    : "True Count: pare as apostas";
+
+  if(trueCount>=2){
+    document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: continue apostando</strong>";
+  } else {
+    document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: pare as apostas</strong>";
+  }
 }
 
 function resetCount(){
@@ -214,4 +245,4 @@ function updateDecision(){
 updateCardInputs();
 </script>
 </body>
-</html>                                           
+</html>
