@@ -13,9 +13,7 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
 .card-select { padding:12px; border-radius:8px; border:2px solid #333; background:rgba(255,255,255,0.05); color:#e0e0e0; font-size:1.1em; width:120px; }
 .card-select option { color:#000; }
 .btn { padding:12px 24px; border:none; border-radius:8px; cursor:pointer; font-size:1em; font-weight:bold; margin:5px; }
-.btn-primary { background:linear-gradient(45deg,#00d4ff,#0099cc); color:white; }
 .btn-danger { background:linear-gradient(45deg,#ff4757,#cc0000); color:white; }
-.btn-success { background:linear-gradient(45deg,#2ed573,#1e904d); color:white; }
 .hand-info { display:flex; justify-content:space-around; margin:20px 0; padding:15px; background:rgba(0,0,0,0.2); border-radius:10px; flex-wrap:wrap; gap:10px; }
 .info-item { text-align:center; min-width:120px; }
 .info-label { font-size:0.9em; color:#888; margin-bottom:5px; }
@@ -51,8 +49,8 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
     <h2 class="section-title">🃏 Suas Cartas</h2>
     <div id="playerCardsContainer"></div>
     <div class="buttons-container">
-      <button class="btn btn-primary" onclick="addCard()">+ Adicionar Carta</button>
       <button class="btn btn-danger" onclick="removeCard()">- Remover Carta</button>
+      <button class="btn btn-danger" onclick="resetCount()">Novo Jogo / Novo Baralho</button>
     </div>
   </div>
 
@@ -71,16 +69,11 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
 
   <!-- Decisão ótima -->
   <div class="decision-output">
-    <h2 class="section-title">✅ Decisão Ótima</h2>
+    <h2 class="section-title">🟢 Decisão</h2>
     <div id="decision" class="decision-box" style="display:none;"></div>
     <p id="decisionText" style="margin-top:20px; font-size:1.2em; color:#888;">
       Selecione suas cartas e a carta do dealer
     </p>
-  </div>
-
-  <div class="buttons-container">
-    <button class="btn btn-success" onclick="updateDecision()">Calcular Decisão</button>
-    <button class="btn btn-danger" onclick="resetCount()">Novo Jogo / Novo Baralho</button>
   </div>
 </div>
 
@@ -99,44 +92,11 @@ function cardCountValue(card){
 }
 
 function addCard(){
-  if(playerCards.length<maxCards){ playerCards.push(''); updateCardInputs(); updateCount(); }
+  if(playerCards.length<maxCards){ playerCards.push(''); updateCardInputs(); updateCount(); updateDecision(); }
 }
 function removeCard(){
-  if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); }
+  if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); updateDecision(); }
 }
-
-function updateCardInputs(){
-  const container=document.getElementById('playerCardsContainer');
-  container.innerHTML='';
-  playerCards.forEach((card,index)=>{
-    const select=document.createElement('select');
-    select.className='card-select';
-    select.id=`card${index+1}`;
-    select.innerHTML=`<option value="">-- Carta ${index+1} --</option>
-      <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
-      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-      <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
-    select.value=card;
-    select.onchange=()=>{ playerCards[index]=select.value; updateCount(); };
-    container.appendChild(select);
-  });
-  const dealer=document.getElementById('dealerCard');
-  dealer.innerHTML=`<option value="">-- Carta Dealer --</option>
-    <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
-    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-    <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
-}
-
-function updateCount(){
-  runningCount=0;
-  playerCards.forEach(c=>{ runningCount+=cardCountValue(c); });
-  let trueCount=runningCount/numDecks;
-  document.getElementById("runningCount").textContent=runningCount;
-  document
-    .getElementById("trueCount").textContent=trueCount.toFixed(2);
-
   if(trueCount>=2){
     document.getElementById("betAdvice").innerHTML = "<strong class='bet-red'>True Count: continue apostando</strong>";
   } else {
