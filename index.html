@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BlackJack - Contagem</title>
 <style>
-@font-face { font-family: 'Aptos'; src: local('Aptos'); }
-* { box-sizing: border-box; font-family: 'Aptos','Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
-body { background: linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); min-height:100vh; margin:0; padding:20px; color:#e0e0e0; }
+body { background: linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); min-height:100vh; margin:0; padding:20px; color:#e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 .container { max-width:800px; margin:0 auto; background:rgba(255,255,255,0.05); border-radius:15px; padding:30px; box-shadow:0 8px 32px rgba(0,0,0,0.3); backdrop-filter:blur(10px); }
 h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text-shadow:0 0 10px rgba(0,212,255,0.5); }
 .subtitle { text-align:center; color:#888; margin-bottom:30px; font-size:1.1em; }
@@ -22,7 +20,11 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
 .info-item { text-align:center; min-width:120px; }
 .info-label { font-size:0.9em; color:#888; margin-bottom:5px; }
 .info-value { font-size:1.3em; font-weight:bold; color:#00d4ff; }
-@media (max-width:600px){ h1{font-size:1.8em;} .card-select{width:100px;} .info-item{min-width:100px;} }
+.decision-box { display:inline-block; padding:20px 40px; border-radius:12px; font-size:2em; font-weight:bold; text-transform:uppercase; letter-spacing:2px; margin-top:15px; }
+.decision-HIT { background:linear-gradient(45deg,#ff4757,#cc0000); color:white; }
+.decision-STAND { background:linear-gradient(45deg,#2ed573,#1e904d); color:white; }
+.decision-DOUBLE { background:linear-gradient(45deg,#ff6b35,#f7931e); color:white; }
+.decision-SPLIT { background:linear-gradient(45deg,#8e44ad,#5d1088); color:white; }
 </style>
 </head>
 <body>
@@ -64,7 +66,17 @@ h1 { text-align:center; color:#00d4ff; margin-bottom:10px; font-size:2.5em; text
     <div class="info-item"><div class="info-label">Recomendação</div><div class="info-value" id="betAdvice">--</div></div>
   </div>
 
+  <!-- Decisão ótima -->
+  <div class="decision-output">
+    <h2 class="section-title">✅ Decisão Ótima</h2>
+    <div id="decision" class="decision-box" style="display:none;"></div>
+    <p id="decisionText" style="margin-top:20px; font-size:1.2em; color:#888;">
+      Selecione suas cartas e a carta do dealer
+    </p>
+  </div>
+
   <div class="buttons-container">
+    <button class="btn btn-success" onclick="updateDecision()">Calcular Decisão</button>
     <button class="btn btn-danger" onclick="resetCount()">Novo Jogo / Novo Baralho</button>
   </div>
 </div>
@@ -89,49 +101,117 @@ function addCard(){
 function removeCard(){
   if(playerCards.length>2){ playerCards.pop(); updateCardInputs(); updateCount(); }
 }
-
-function updateCardInputs(){
-  const container=document.getElementById('playerCardsContainer');
-  container.innerHTML='';
-  playerCards.forEach((card,index)=>{
-    const select=document.createElement('select');
-    select.className='card-select';
-    select.id=`card${index+1}`;
-    select.innerHTML=`<option value="">-- Carta ${index+1} --</option>
-      <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
-      <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-      <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-      <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
-    select.value=card;
-    select.onchange=()=>{ playerCards[index]=select.value; updateCount(); };
-    container.appendChild(select);
-  });
-  const dealer=document.getElementById('dealerCard');
-  dealer.innerHTML=`<option value="">-- Carta Dealer --</option>
-    <option value="A">Ás</option><option value="2">2</option><option value="3">3</option>
-    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-    <option value="10">10</option><option value="J">Valete</option><option value="Q">Dama</option><option value="K">Rei</option>`;
-}
 function updateCount(){
   runningCount=0;
   playerCards.forEach(c=>{ runningCount+=cardCountValue(c); });
   let trueCount=runningCount/numDecks;
   document.getElementById("runningCount").textContent=runningCount;
   document.getElementById("trueCount").textContent=trueCount.toFixed(2);
-  document.getElementById("betAdvice").textContent=(trueCount>=2)?"True Count: continue apostando":"True Count: pare as apostas";
+  document.getElementById("betAdvice").textContent=(trueCount>=2) 
+    ? "True Count: continue apostando" 
+    : "True Count: pare as apostas";
 }
+
 function resetCount(){
   playerCards=['',''];
   runningCount=0;
   document.getElementById("runningCount").textContent=0;
   document.getElementById("trueCount").textContent=0;
   document.getElementById("betAdvice").textContent="--";
+  document.getElementById("decision").style.display="none";
+  document.getElementById("decisionText").textContent="Selecione suas cartas e a carta do dealer";
   updateCardInputs();
 }
 
-// Inicializa os menus ao carregar a página
+// Funções auxiliares para decisão
+function cardRank(card){
+  if(!card) return null;
+  if(card==="A") return 1;
+  if(["J","Q","K","10"].includes(card)) return 10;
+  return parseInt(card);
+}
+
+function calculateHandValue(cards){
+  let total=0, aces=0;
+  cards.forEach(c=>{
+    if(c==="A"){ aces++; total+=11; }
+    else if(["J","Q","K","10"].includes(c)){ total+=10; }
+    else if(c){ total+=parseInt(c); }
+  });
+  while(total>21 && aces>0){ total-=10; aces--; }
+  return { value: total, isSoft: aces>0 };
+}
+
+function getBasicStrategyDecision(playerCards, dealerVal){
+  const activeCards=playerCards.filter(c=>c);
+  const { value: total, isSoft }=calculateHandValue(activeCards);
+
+  // Pares
+  if(activeCards.length===2 && activeCards[0]===activeCards[1]){
+    const pairCard=activeCards[0];
+    if(pairCard==="A"||pairCard==="8") return "SPLIT";
+    if(["10","J","Q","K"].includes(pairCard)) return "STAND";
+    if(pairCard==="9") return (dealerVal>=2&&dealerVal<=9&&dealerVal!==7)?"SPLIT":"STAND";
+    if(pairCard==="7") return (dealerVal>=2&&dealerVal<=7)?"SPLIT":"HIT";
+    if(pairCard==="6") return (dealerVal>=2&&dealerVal<=6)?"SPLIT":"HIT";
+    if(pairCard==="5") return (dealerVal>=2&&dealerVal<=9)?"DOUBLE":"HIT";
+    if(pairCard==="4") return (dealerVal===5||dealerVal===6)?"SPLIT":"HIT";
+    if(pairCard==="3"||pairCard==="2") return (dealerVal>=2&&dealerVal<=7)?"SPLIT":"HIT";
+  }
+
+  // Soft hands
+  if(isSoft){
+    if(total>=19) return "STAND";
+    if(total===18){
+      if(dealerVal>=3&&dealerVal<=6) return "DOUBLE";
+      if([2,7,8].includes(dealerVal)) return "STAND";
+      return "HIT";
+    }
+    if(total===17) return (dealerVal>=3&&dealerVal<=6)?"DOUBLE":"HIT";
+    if(total===15||total===16) return (dealerVal>=4&&dealerVal<=6)?"DOUBLE":"HIT";
+    if(total===13||total===14) return (dealerVal===5||dealerVal===6)?"DOUBLE":"HIT";
+    return "HIT";
+  }
+
+  // Hard hands
+  if(total>=17) return "STAND";
+  if(total===16) return (dealerVal>=2&&dealerVal<=6)?"STAND":"HIT";
+  if(total>=13&&total<=15) return (dealerVal>=2&&dealerVal<=6)?"STAND":"HIT";
+  if(total===12) return (dealerVal>=4&&dealerVal<=6)?"STAND":"HIT";
+  if(total===11) return (dealerVal!==1)?"DOUBLE":"HIT";
+  if(total===10) return (dealerVal>=2&&dealerVal<=9)?"DOUBLE":"HIT";
+  if(total===9) return (dealerVal>=3&&dealerVal<=6)?"DOUBLE":"HIT";
+  return "HIT";
+}
+
+function updateDecision(){
+  const dealerVal=cardRank(document.getElementById("dealerCard").value);
+  const activePlayerCards=playerCards.filter(c=>c);
+
+  if(activePlayerCards.length<2||!dealerVal){
+    document.getElementById("decision").style.display="none";
+    document.getElementById("decisionText").textContent="Selecione suas cartas e a carta do dealer";
+    return;
+  }
+
+  const decision=getBasicStrategyDecision(playerCards,dealerVal);
+  let message="";
+  switch(decision){
+    case "HIT": message="📈 Pegue outra carta"; break;
+    case "STAND": message="🛑 Fique com a mão atual"; break;
+    case "DOUBLE": message="💰 Dobre a aposta e pegue apenas uma carta"; break;
+    case "SPLIT": message="✂️ Divida o par"; break;
+  }
+
+  const decisionElement=document.getElementById("decision");
+  decisionElement.textContent=decision;
+  decisionElement.className=`decision-box decision-${decision}`;
+  decisionElement.style.display="inline-block";
+  document.getElementById("decisionText").textContent=message;
+}
+
+// Inicializa menus ao carregar
 updateCardInputs();
 </script>
 </body>
-</html>
+</html>                                           
